@@ -5,11 +5,22 @@ use termion::{color, style, terminal_size};
 fn main() {
     let s = System::new_all();
     let mut disks_info = HashMap::new();
+    let mut max_partition_name_len = 0;
+    let mut max_mount_point_len = 0;
 
     for disk in s.disks() {
         let disk_name = disk.name().to_string_lossy().into_owned();
+        let disk_mount_point = disk.mount_point().to_string_lossy().into_owned();
         let disk_info = disks_info.entry(disk_name.clone()).or_insert_with(Vec::new);
         disk_info.push(disk);
+
+        if disk_name.len() > max_partition_name_len {
+            max_partition_name_len = disk_name.len();
+        }
+
+        if disk_mount_point.len() > max_mount_point_len {
+            max_mount_point_len = disk_mount_point.len();
+        }
     }
 
     let (term_width, _) = terminal_size().unwrap_or((80, 24));
@@ -29,33 +40,59 @@ fn main() {
             };
 
             let partition_info = format!(
-                " [{}] [{}] ",
-                partition.name().to_string_lossy(),
+                "   [{}]{} ",
                 partition.mount_point().to_string_lossy(),
+                " ".repeat(max_mount_point_len - partition.mount_point().to_string_lossy().len()),
             );
+
             let storage_info = format!(
-                " {}/{}",
+                " [{}/{}]",
                 format_size(used_space),
                 format_size(total_space)
             );
-            let used_width = term_width as usize - partition_info.len() - storage_info.len() - 4; // -4 accounts for spaces and brackets
-            
-            let bar_width = (percent_used / 100.0 * used_width as f64) as usize;
-            let space_width = used_width - bar_width;
 
-            let progress_bar = format!(
-                "[{}{}{}{}] {:.2}%",
-                bar_color,
-                "█".repeat(bar_width),
-                style::Reset,
-                ":".repeat(space_width),
-                percent_used
-            );
+            let percent_str = if percent_used < 100.0 {
+                format!("{:>5.2}%", percent_used)
+            } else {
+                format!("{:>3}%", percent_used)
+            };
+
+            let bar_width = (term_width as usize - partition_info.len() - storage_info.len() - 3) & !1;
+            let fifty_percent = (bar_width / 2).saturating_sub(percent_str.len() / 2);
+
+            let space_used = (percent_used / 100.0 * bar_width as f64).ceil() as usize;
+            let space_free = (bar_width).saturating_sub(space_used);
+
+            let disk_space_bar = if space_used < (fifty_percent + percent_str.len()) {
+                format!(
+                    "[{}{}{}{}{}{}{}{}]",
+                    bar_color,
+                    "█".repeat(space_used),
+                    "░".repeat(fifty_percent.saturating_sub(space_used)),
+                    style::Reset,
+                    percent_str,
+                    bar_color,
+                    "░".repeat(fifty_percent),
+                    style::Reset
+                )
+            } else {
+                format!(
+                    "[{}{}{}{}{}{}{}{}]",
+                    bar_color,
+                    "█".repeat(fifty_percent),
+                    style::Reset,
+                    percent_str,
+                    bar_color,
+                    "█".repeat(space_used.saturating_sub(fifty_percent + percent_str.len())),
+                    "░".repeat(space_free),
+                    style::Reset
+                )
+            };
 
             let output = format!(
-                "{}{} {}",
+                "{}{}{}",
                 partition_info,
-                progress_bar,
+                disk_space_bar,
                 storage_info
             );
 
