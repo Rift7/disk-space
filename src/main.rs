@@ -27,11 +27,15 @@ fn main() {
 
     for (disk_name, partitions) in disks_info {
         println!("[{}]", disk_name);
-        for partition in partitions {
+        let total_partitions = partitions.len(); // Get total number of partitions for each disk
+        for (index, partition) in partitions.iter().enumerate() {
             let total_space = partition.total_space();
             let available_space = partition.available_space();
             let used_space = total_space - available_space;
             let percent_used = used_space as f64 / total_space as f64 * 100.0;
+
+            let is_last = index == total_partitions - 1; // Check if this is the last partition
+            let tree_style = if is_last { "└─" } else { "├─" }; // Choose tree style based on whether it is the last partition or not
 
             let bar_color: Box<dyn std::fmt::Display> = if percent_used > 90.0 {
                 Box::new(color::Fg(color::Red))
@@ -40,7 +44,8 @@ fn main() {
             };
 
             let partition_info = format!(
-                "   [{}]{} ",
+                " {} [{}]{} ",
+                tree_style,
                 partition.mount_point().to_string_lossy(),
                 " ".repeat(max_mount_point_len - partition.mount_point().to_string_lossy().len()),
             );
@@ -51,15 +56,16 @@ fn main() {
                 format_size(total_space)
             );
 
-            let percent_str = if percent_used < 100.0 {
-                format!("{:>5.2}%", percent_used)
+            let percent_str = if percent_used < 10.0 {
+                format!(" {:>4.2}% ", percent_used)
+            } else if percent_used < 100.0 {
+                format!(" {:>5.2}% ", percent_used)
             } else {
-                format!("{:>3}%", percent_used)
+                format!(" {:>3}% ", percent_used)
             };
 
-            let bar_width = (term_width as usize - partition_info.len() - storage_info.len() - 3) & !1;
-            let fifty_percent = (bar_width / 2).saturating_sub(percent_str.len() / 2);
-
+            let bar_width = (term_width as usize - partition_info.len() - storage_info.len()) & !1;
+            let fifty_percent = (bar_width / 2).saturating_sub(((percent_str.len() + 1) & !1) / 2);
             let space_used = (percent_used / 100.0 * bar_width as f64).ceil() as usize;
             let space_free = (bar_width).saturating_sub(space_used);
 
@@ -68,7 +74,11 @@ fn main() {
                     "[{}{}{}{}{}{}{}{}]",
                     bar_color,
                     "█".repeat(space_used),
-                    "░".repeat(fifty_percent.saturating_sub(space_used)),
+                    "░".repeat(if percent_used < 10.0 {
+                        fifty_percent.saturating_sub(space_used) + 1
+                    } else {
+                        fifty_percent.saturating_sub(space_used)
+                    }),
                     style::Reset,
                     percent_str,
                     bar_color,
