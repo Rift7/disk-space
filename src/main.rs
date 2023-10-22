@@ -73,8 +73,8 @@ fn main() {
                 format!(
                     "[{}{}{}{}{}{}{}{}]",
                     bar_color,
-                    "█".repeat(space_used),
-                    "░".repeat(if percent_used < 10.0 {
+                    "▇".repeat(space_used),
+                    ":".repeat(if percent_used < 10.0 {
                         fifty_percent.saturating_sub(space_used) + 1
                     } else {
                         fifty_percent.saturating_sub(space_used)
@@ -82,19 +82,19 @@ fn main() {
                     style::Reset,
                     percent_str,
                     bar_color,
-                    "░".repeat(fifty_percent),
+                    ":".repeat(fifty_percent),
                     style::Reset
                 )
             } else {
                 format!(
                     "[{}{}{}{}{}{}{}{}]",
                     bar_color,
-                    "█".repeat(fifty_percent),
+                    "▇".repeat(fifty_percent),
                     style::Reset,
                     percent_str,
                     bar_color,
-                    "█".repeat(space_used.saturating_sub(fifty_percent + percent_str.len())),
-                    "░".repeat(space_free),
+                    "▇".repeat(space_used.saturating_sub(fifty_percent + percent_str.len())),
+                    ":".repeat(space_free),
                     style::Reset
                 )
             };

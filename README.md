@@ -18,32 +18,27 @@ Clone this repository:
 ```sh
 git clone https://github.com/Rift7/disk-space.git
 cd disk-space
-```
-
-Compile and run:
-
-```sh
 cargo build --release
-cargo run
+# and maybe install it for future use
+cp /target/release/disk-space /usr/local/bin
 ```
 
 ## Usage
 
-Simply run the compiled binary, and it will display the hard drives, their partitions, and the used and total space in a visually friendly format.
-
 ```sh
 ./target/release/disk-space
+# OR if you installed it
+disk-space
 ```
 
 ## Sample Output
 
 ```
-[/dev/nvme0n1p6]
- [/dev/nvme0n1p6] [/]        [██████████████::::::::::] 63.31% [170.49 GB/269.28 GB]
- [/dev/nvme0n1p6] [/home]    [██████████████::::::::::] 63.31% [170.49 GB/269.28 GB]
-
 [/dev/nvme0n1p5]
- [/dev/nvme0n1p5] [/boot/efi] [█:::::::::::::::::::::::] 1.91% [19.55 MB/1021.98 MB]
+ └─ [/boot/efi] [▇▇:::::::::::::::::::::::::::::::: 1.91% :::::::::::::::::::::::::::::::::] [19.55 MB/1021.98 MB]
+[/dev/nvme0n1p6]
+ ├─ [/]         [▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 63.37% ▇▇▇▇▇▇:::::::::::::::::::::::::::] [170.64 GB/269.28 GB]
+ └─ [/home]     [▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 63.37% ▇▇▇▇▇▇:::::::::::::::::::::::::::] [170.64 GB/269.28 GB]
 ```
 
 ## Dependencies
@@ -53,7 +48,7 @@ Simply run the compiled binary, and it will display the hard drives, their parti
 
 ## Contributing
 
-Feel free to contribute to this project. Fork it, make your changes, and submit a pull request. Ensure that your code is well-commented and tested.
+Feel free to contribute to this project. Fork it, make your changes, and submit a pull request.
 
 ## License
 
